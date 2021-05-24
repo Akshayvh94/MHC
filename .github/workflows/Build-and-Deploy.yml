@@ -97,7 +97,7 @@ jobs:
     name: 🚀 Deploy to staging
     runs-on: ubuntu-latest
     environment: 
-      name: STAGING
+      name: STAGING, PRODUCTION
     needs: [infra, build]
     steps:
       - name: Download a Build Artifact
@@ -115,6 +115,12 @@ jobs:
         uses: azure/webapps-deploy@v2
         with:
           app-name: ${{secrets.WEBSITE_NAME}}
+          package: MyHealth.Web/bin/Release/netcoreapp1.0/publish
+          
+      - name: Deploy to Azure WebApp
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{secrets.WEBSITE_NAME}}stage
           package: MyHealth.Web/bin/Release/netcoreapp1.0/publish
         
       # Azure logout 
