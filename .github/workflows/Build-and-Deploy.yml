@@ -81,12 +81,7 @@ jobs:
             az group create --location ${{ env.RESOURCE_GROUP_LOCATION }} --resource-group ${{ env.RESOURCE_GROUP_NAME }}
             echo "Azure resource group created"
            fi
-       # echo secrets
-      - name: Echo Secrets
-        run: |
-          echo "WebsiteName: ${{secrets.WEBSITE_NAME}} | sed 's/./& /g'"
-          echo "SQL Server Name: ${{secrets.AZURE_SQL_SERVER_NAME}} | sed 's/./& /g'"
-      
+             
       # Deploy resources using ARM template
       - name: Deploy Azure Resource Manager (ARM) Template
         uses: Azure/arm-deploy@v1
