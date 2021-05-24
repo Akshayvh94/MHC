@@ -51,7 +51,6 @@
     },
     "variables": {
         "MHCServerName": "[toLower(parameters('MHC_ServerName'))]",
-        "MHCServerNameDev": "[concat(variables('MHCServerName'), 'dev')]",
         "MHCServerNameStage": "[concat(variables('MHCServerName'), 'stage')]"
     },
     "resources": [
@@ -88,52 +87,6 @@
                     "apiVersion": "2014-04-01-preview",
                     "dependsOn": [
                         "[resourceId('Microsoft.Sql/servers', variables('MHCServerName'))]"
-                    ],
-                    "tags": {
-                        "displayName": "MHCDB"
-                    },
-                    "properties": {
-                        "collation": "[parameters('MHC_DBCollation')]",
-                        "edition": "[parameters('MHC_DBEdition')]",
-                        "maxSizeBytes": "1073741824"
-                    }
-                }
-            ]
-        },
-        {
-            "name": "[variables('MHCServerNameDev')]",
-            "type": "Microsoft.Sql/servers",
-            "location": "[resourceGroup().location]",
-            "apiVersion": "2014-04-01-preview",
-            "dependsOn": [ ],
-            "tags": {
-                "displayName": "MHCe2eServer"
-            },
-            "properties": {
-                "administratorLogin": "[parameters('MHC_DBLogin')]",
-                "administratorLoginPassword": "[parameters('MHC_DBPasswordForTest')]"
-            },
-            "resources": [
-                {
-                    "name": "[concat('AllowAllIps', variables('MHCServerNameDev'))]",
-                    "type": "firewallrules",
-                    "location": "[resourceGroup().location]",
-                    "apiVersion": "2014-04-01-preview",
-                    "dependsOn": [
-                        "[resourceId('Microsoft.Sql/servers', variables('MHCServerNameDev'))]"
-                    ],
-                    "properties": {
-                        "startIpAddress": "0.0.0.0",
-                        "endIpAddress": "0.0.0.0"
-                    }
-                },
-                {
-                    "name": "[parameters('MHC_DBName')]",
-                    "type": "databases",
-                    "location": "[resourceGroup().location]",
-                    "apiVersion": "2014-04-01-preview",
-                    "dependsOn": [
-                        "[resourceId('Microsoft.Sql/servers', variables('MHCServerNameDev'))]"
                     ],
                     "tags": {
                         "displayName": "MHCDB"
@@ -202,18 +155,6 @@
             },
             "properties": {
                 "ApplicationId": "[concat(parameters('WebsiteName'), '-Insights')]"
-            }
-        },
-        {
-            "name": "[concat(parameters('WebsiteName'), '-DevInsights')]",
-            "type": "Microsoft.Insights/components",
-            "location": "[resourceGroup().location]",
-            "apiVersion": "2014-04-01",
-            "tags": {
-                "displayName": "insightsComponents"
-            },
-            "properties": {
-                "ApplicationId": "[concat(parameters('WebsiteName'), '-DevInsights')]"
             }
         },
         {
@@ -317,10 +258,8 @@
             "dependsOn": [
                 "[resourceId('Microsoft.Web/serverfarms', parameters('MHC_HostingPlanName'))]",
                 "[resourceId('Microsoft.Sql/servers', variables('MHCServerName'))]",
-                "[resourceId('Microsoft.Sql/servers', variables('MHCServerNameDev'))]",
                 "[resourceId('Microsoft.Sql/servers', variables('MHCServerNameStage'))]",
                 "[resourceId('Microsoft.Insights/components', concat(parameters('WebsiteName'), '-Insights'))]",
-                "[resourceId('Microsoft.Insights/components', concat(parameters('WebSiteName'), '-DevInsights'))]",
                 "[resourceId('Microsoft.Insights/components', concat(parameters('WebSiteName'), '-StagingInsights'))]"
             ],
             "location": "[resourceGroup().location]",
@@ -370,44 +309,6 @@
                         "connectionStringNames": [ "DefaultConnectionString" ],
                         "appSettingNames": [ "keys:ApplicationInsights:InstrumentationKey" ]
                     }
-                },
-                {
-                    "name": "Dev",
-                    "type": "slots",
-                    "location": "[resourceGroup().location]",
-                    "apiVersion": "2014-11-01",
-                    "dependsOn": [
-                        "[resourceId('Microsoft.Web/sites', parameters('WebSiteName'))]"
-                    ],
-                    "properties": {
-                    },
-                    "resources": [
-                        {
-                            "name": "connectionstrings",
-                            "type": "config",
-                            "apiVersion": "2014-11-01",
-                            "dependsOn": [
-                                "[resourceId('Microsoft.Web/sites/slots', parameters('WebSiteName'), 'Dev')]"
-                            ],
-                            "properties": {
-                                "DefaultConnectionString": {
-                                    "value": "[concat('Data Source=tcp:', reference(concat('Microsoft.Sql/servers/', variables('MHCServerNameDev'))).fullyQualifiedDomainName, ',1433;Initial Catalog=', parameters('MHC_DBName'), ';User Id=', parameters ('MHC_DBLogin'), '@', variables('MHCServerNameDev'), ';Password=', parameters('MHC_DBPasswordForTest'), ';')]",
-                                    "type": "SQLAzure"
-                                }
-                            }
-                        },
-                        {
-                            "name": "appsettings",
-                            "type": "config",
-                            "apiVersion": "2014-11-01",
-                            "dependsOn": [
-                                "[resourceId('Microsoft.Web/sites/slots', parameters('WebSiteName'), 'Dev')]"
-                            ],
-                            "properties": {
-                                "Keys:ApplicationInsights:InstrumentationKey": "[reference(concat('Microsoft.Insights/components/', parameters('WebsiteName'), '-DevInsights')).InstrumentationKey]"
-                            }
-                        }
-                    ]
                 },
                 {
                     "name": "Staging",
